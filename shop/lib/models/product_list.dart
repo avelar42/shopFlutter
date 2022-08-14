@@ -9,26 +9,33 @@ class ProductList with ChangeNotifier {
 
   bool _showFavoriteOnly = false;
 
-  List<Product> get items {
-    if (_showFavoriteOnly) {
-      return _items.where((product) => product.isFavorite).toList();
-    } else {
-      return [..._items];
-    }
-  }
+  List<Product> get items => [..._items];
+  List<Product> get favoriteItems =>
+      _items.where((product) => product.isFavorite).toList();
 
   void addProduct(Product product) {
     _items.add(product);
     notifyListeners();
   }
-
-  void showFavoriteOnly() {
-    _showFavoriteOnly = true;
-    notifyListeners();
-  }
-
-  void showallOnly() {
-    _showFavoriteOnly = false;
-    notifyListeners();
-  }
 }
+
+
+// bool _showFavoriteOnly = false;
+
+//   List<Product> get items {
+//     if (_showFavoriteOnly) {
+//       return _items.where((product) => product.isFavorite).toList();
+//     } else {
+//       return [..._items];
+//     }
+//   }
+
+//   void showFavoriteOnly() {
+//     _showFavoriteOnly = true;
+//     notifyListeners();
+//   }
+
+//   void showallOnly() {
+//     _showFavoriteOnly = false;
+//     notifyListeners();
+//   }
