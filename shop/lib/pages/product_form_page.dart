@@ -38,7 +38,22 @@ class _ProductFormPageState extends State<ProductFormPage> {
     setState(() {});
   }
 
+  bool isValidImageUrl(String url) {
+    bool isValidUrl = Uri.tryParse(url)?.hasAbsolutePath ?? false;
+    bool endsWithfile = url.toLowerCase().endsWith('.png') ||
+        url.toLowerCase().endsWith('.jpg') ||
+        url.toLowerCase().endsWith('.jpeg');
+
+    return isValidUrl && endsWithfile;
+  }
+
   void _submitForm() {
+    final isValid = _formKey.currentState?.validate() ?? false;
+
+    if (!isValid) {
+      return;
+    }
+
     _formKey.currentState?.save();
     final newProduct = Product(
         id: Random().nextDouble().toString(),
@@ -46,10 +61,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
         description: _formData['description'] as String,
         imageUrl: _formData['imageUrl'] as String,
         price: _formData['price'] as double);
-    print(newProduct.id);
-    print(newProduct.name);
-    print(newProduct.price);
-    print(newProduct.imageUrl);
   }
 
   @override
@@ -72,6 +83,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     FocusScope.of(context).requestFocus(_priceFocus);
                   },
                   onSaved: (name) => _formData['name'] = name ?? '',
+                  validator: (_name) {
+                    final name = _name ?? '';
+                    if (name.trim().isEmpty) {
+                      return 'Nome e obrigatorio';
+                    }
+                    if (name.trim().length < 3) {
+                      return 'Min 3 caracteres';
+                    }
+                    return null;
+                  },
                 ),
                 TextFormField(
                   decoration: InputDecoration(labelText: 'Preco'),
@@ -82,6 +103,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   },
                   onSaved: (price) =>
                       _formData['price'] = double.parse(price ?? '0'),
+                  validator: (_price) {
+                    final priceString = _price ?? '';
+                    final price = double.tryParse(priceString) ?? -1;
+                    if (price <= 0) {
+                      return 'Informe um valor valido!';
+                    }
+                    return null;
+                  },
                   keyboardType: TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -93,6 +122,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   maxLines: 3,
                   onSaved: (description) =>
                       _formData['description'] = description ?? '',
+                  validator: (_description) {
+                    final description = _description ?? '';
+                    if (description.trim().isEmpty) {
+                      return 'Descricao e obrigatorio';
+                    }
+                    if (description.trim().length < 10) {
+                      return 'Min 10 caracteres';
+                    }
+                    return null;
+                  },
                 ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -107,6 +146,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         onFieldSubmitted: (_) => _submitForm(),
                         onSaved: (imageUrl) =>
                             _formData['imageUrl'] = imageUrl ?? '',
+                        validator: (_imageUrl) {
+                          final imageUrl = _imageUrl ?? '';
+                          if (!isValidImageUrl(imageUrl)) {
+                            return 'Informe uma Url valida!';
+                          }
+                        },
                       ),
                     ),
                     Container(
