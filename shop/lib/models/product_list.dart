@@ -1,13 +1,16 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shop/data/dummy_data.dart';
 import 'package:shop/models/product.dart';
 
 class ProductList with ChangeNotifier {
   List<Product> _items = dummyProducts;
+  final _baseUrl = 'https://shop-cod3r-d0b60-default-rtdb.firebaseio.com';
 
   bool _showFavoriteOnly = false;
 
@@ -16,8 +19,24 @@ class ProductList with ChangeNotifier {
       _items.where((product) => product.isFavorite).toList();
 
   void addProduct(Product product) {
-    _items.add(product);
-    notifyListeners();
+    final future = http.post(Uri.parse('$_baseUrl/products.json'),
+        body: jsonEncode({
+          "name": product.name,
+          "description": product.description,
+          "price": product.price,
+          "imageUrl": product.imageUrl,
+          "isFavorite": product.isFavorite,
+        }));
+    future.then((response) {
+      final id = jsonDecode(response.body)['name'];
+      _items.add(Product(
+          id: id,
+          name: product.name,
+          description: product.description,
+          imageUrl: product.imageUrl,
+          price: product.price));
+      notifyListeners();
+    });
   }
 
   void saveProduct(Map<String, Object> data) {
