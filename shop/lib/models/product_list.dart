@@ -5,12 +5,12 @@ import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shop/data/dummy_data.dart';
 import 'package:shop/models/product.dart';
 
 class ProductList with ChangeNotifier {
-  List<Product> _items = dummyProducts;
-  final _baseUrl = 'https://shop-cod3r-d0b60-default-rtdb.firebaseio.com';
+  List<Product> _items = [];
+  final _url =
+      'https://shop-cod3r-d0b60-default-rtdb.firebaseio.com/products.json';
 
   bool _showFavoriteOnly = false;
 
@@ -19,7 +19,7 @@ class ProductList with ChangeNotifier {
       _items.where((product) => product.isFavorite).toList();
 
   Future<void> addProduct(Product product) async {
-    final response = await http.post(Uri.parse('$_baseUrl/products.json'),
+    final response = await http.post(Uri.parse(_url),
         body: jsonEncode({
           "name": product.name,
           "description": product.description,
@@ -74,6 +74,26 @@ class ProductList with ChangeNotifier {
 
   int get itemsCount {
     return _items.length;
+  }
+
+  Future<void> loadProducts() async {
+    _items.clear();
+    final response = await http.get(Uri.parse(_url));
+    if (response.body == 'null') return;
+    Map<String, dynamic> data = jsonDecode(response.body);
+    data.forEach((productId, productData) {
+      _items.add(
+        Product(
+          id: productId,
+          name: productData['name'],
+          description: productData['description'],
+          imageUrl: productData['imageUrl'],
+          price: productData['price'],
+          isFavorite: productData['isFavorite'],
+        ),
+      );
+    });
+    notifyListeners();
   }
 }
 
