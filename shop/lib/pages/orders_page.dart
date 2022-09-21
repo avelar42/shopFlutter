@@ -5,40 +5,35 @@ import 'package:shop/components/order.dart';
 
 import '../models/order_list.dart';
 
-class OrdersPage extends StatefulWidget {
-  const OrdersPage({Key? key}) : super(key: key);
-
-  @override
-  State<OrdersPage> createState() => _OrdersPageState();
-}
-
-class _OrdersPageState extends State<OrdersPage> {
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    Provider.of<OrderList>(context, listen: false).loadOrders().then((_) {
-      setState(() {
-        isLoading = false;
-      });
-    });
-  }
-
+class OrdersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final OrderList orders = Provider.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Meus pedidos'),
       ),
       drawer: AppDrawer(),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: orders.itemsCount,
-              itemBuilder: (ctx, i) => OrderWidget(order: orders.items[i])),
+      body: FutureBuilder(
+        future: Provider.of<OrderList>(context, listen: false).loadOrders(),
+        builder: (ctx, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.error != null) {
+            return Center(child: Text('Ocorreu um erro'));
+          } else {
+            return Consumer<OrderList>(
+                builder: ((ctx, orders, child) => ListView.builder(
+                    itemCount: orders.itemsCount,
+                    itemBuilder: (ctx, i) =>
+                        OrderWidget(order: orders.items[i]))));
+          }
+        },
+      ),
+      // body: isLoading
+      //     ? Center(child: CircularProgressIndicator())
+      //     : ListView.builder(
+      //         itemCount: orders.itemsCount,
+      //         itemBuilder: (ctx, i) => OrderWidget(order: orders.items[i])),
     );
   }
 }
