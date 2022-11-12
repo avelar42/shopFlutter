@@ -10,6 +10,7 @@ import 'package:shop/models/product.dart';
 import 'package:shop/utils/constants.dart';
 
 class ProductList with ChangeNotifier {
+  String _token;
   List<Product> _items = [];
 
   bool _showFavoriteOnly = false;
@@ -17,6 +18,8 @@ class ProductList with ChangeNotifier {
   List<Product> get items => [..._items];
   List<Product> get favoriteItems =>
       _items.where((product) => product.isFavorite).toList();
+
+  ProductList(this._token, this._items);
 
   Future<void> addProduct(Product product) async {
     final response =
@@ -99,8 +102,8 @@ class ProductList with ChangeNotifier {
 
   Future<void> loadProducts() async {
     _items.clear();
-    final response =
-        await http.get(Uri.parse('${Constants.PRODUCT_BASE_URL}.json'));
+    final response = await http
+        .get(Uri.parse('${Constants.PRODUCT_BASE_URL}.json?auth=$_token'));
     if (response.body == 'null') return;
     Map<String, dynamic> data = jsonDecode(response.body);
     data.forEach((productId, productData) {
