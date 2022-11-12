@@ -9,7 +9,7 @@ class Auth with ChangeNotifier {
       'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyD5BowDVXwGxecnB2A1WVAi1r5gKP4e2sw';
   String? _token;
   String? _email;
-  String? _uid;
+  String? _userid;
   DateTime? _expireDate;
 
   bool get isAuth {
@@ -25,8 +25,8 @@ class Auth with ChangeNotifier {
     return isAuth ? _email : null;
   }
 
-  String? get uid {
-    return isAuth ? _uid : null;
+  String? get userid {
+    return isAuth ? _userid : null;
   }
 
   Future<void> _authenticate(
@@ -43,7 +43,7 @@ class Auth with ChangeNotifier {
     } else {
       _token = body['idToken'];
       _email = body['email'];
-      _uid = body['localId'];
+      _userid = body['localId'];
       _expireDate =
           DateTime.now().add(Duration(seconds: int.parse(body['expiresIn'])));
       notifyListeners();

@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shop/exceptions/http_exception.dart';
@@ -10,7 +8,7 @@ import 'package:shop/models/product.dart';
 import 'package:shop/utils/constants.dart';
 
 class ProductList with ChangeNotifier {
-  String _token;
+  final String _token;
   List<Product> _items = [];
 
   bool _showFavoriteOnly = false;
@@ -22,15 +20,14 @@ class ProductList with ChangeNotifier {
   ProductList(this._token, this._items);
 
   Future<void> addProduct(Product product) async {
-    final response =
-        await http.post(Uri.parse('${Constants.PRODUCT_BASE_URL}.json'),
-            body: jsonEncode({
-              "name": product.name,
-              "description": product.description,
-              "price": product.price,
-              "imageUrl": product.imageUrl,
-              "isFavorite": product.isFavorite,
-            }));
+    final response = await http.post(
+        Uri.parse('${Constants.PRODUCT_BASE_URL}.json?auth=$_token'),
+        body: jsonEncode({
+          "name": product.name,
+          "description": product.description,
+          "price": product.price,
+          "imageUrl": product.imageUrl,
+        }));
 
     final id = jsonDecode(response.body)['name'];
     _items.add(Product(
@@ -63,7 +60,8 @@ class ProductList with ChangeNotifier {
     int index = _items.indexWhere((p) => p.id == product.id);
     if (index >= 0) {
       await http.patch(
-          Uri.parse('${Constants.PRODUCT_BASE_URL}/${product.id}.json'),
+          Uri.parse(
+              '${Constants.PRODUCT_BASE_URL}/${product.id}.json?auth=$_token'),
           body: jsonEncode({
             "name": product.name,
             "description": product.description,
@@ -83,7 +81,8 @@ class ProductList with ChangeNotifier {
       _items.remove(product);
       notifyListeners();
       final response = await http.delete(
-        Uri.parse('${Constants.PRODUCT_BASE_URL}/${product.id}.json'),
+        Uri.parse(
+            '${Constants.PRODUCT_BASE_URL}/${product.id}.json?auth=$_token'),
       );
 
       if (response.statusCode >= 400) {
@@ -114,7 +113,6 @@ class ProductList with ChangeNotifier {
           description: productData['description'],
           imageUrl: productData['imageUrl'],
           price: productData['price'],
-          isFavorite: productData['isFavorite'],
         ),
       );
     });
