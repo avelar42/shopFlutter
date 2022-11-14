@@ -9,6 +9,7 @@ import 'package:shop/utils/constants.dart';
 
 class ProductList with ChangeNotifier {
   final String _token;
+  final String _userId;
   List<Product> _items = [];
 
   bool _showFavoriteOnly = false;
@@ -17,7 +18,7 @@ class ProductList with ChangeNotifier {
   List<Product> get favoriteItems =>
       _items.where((product) => product.isFavorite).toList();
 
-  ProductList(this._token, this._items);
+  ProductList([this._token = '', this._items = const [], this._userId = '']);
 
   Future<void> addProduct(Product product) async {
     final response = await http.post(
@@ -104,16 +105,24 @@ class ProductList with ChangeNotifier {
     final response = await http
         .get(Uri.parse('${Constants.PRODUCT_BASE_URL}.json?auth=$_token'));
     if (response.body == 'null') return;
+
+    final favResponse = await http.get(
+      Uri.parse('${Constants.USER_FAVORITES_URL}/$_userId.json?auth=$_token'),
+    );
+
+    Map<String, dynamic> favData =
+        favResponse.body == 'null' ? {} : jsonDecode(favResponse.body);
     Map<String, dynamic> data = jsonDecode(response.body);
     data.forEach((productId, productData) {
+      final isFavorite = favData[productId] ?? false;
       _items.add(
         Product(
-          id: productId,
-          name: productData['name'],
-          description: productData['description'],
-          imageUrl: productData['imageUrl'],
-          price: productData['price'],
-        ),
+            id: productId,
+            name: productData['name'],
+            description: productData['description'],
+            imageUrl: productData['imageUrl'],
+            price: productData['price'],
+            isFavorite: isFavorite),
       );
     });
     notifyListeners();
