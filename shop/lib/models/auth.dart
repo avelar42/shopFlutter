@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:shop/exceptions/auth_exception.dart';
+
+import '../data/store.dart';
 
 class Auth with ChangeNotifier {
   static const _url =
@@ -11,6 +14,7 @@ class Auth with ChangeNotifier {
   String? _email;
   String? _userid;
   DateTime? _expireDate;
+  Timer? _logoutTimer;
 
   bool get isAuth {
     final isValid = _expireDate?.isAfter(DateTime.now()) ?? false;
@@ -46,6 +50,14 @@ class Auth with ChangeNotifier {
       _userid = body['localId'];
       _expireDate =
           DateTime.now().add(Duration(seconds: int.parse(body['expiresIn'])));
+
+      Store.saveMap('userData', {
+        'token': _token,
+        'email': _email,
+        'userId': userid,
+        'expireDate': _expireDate!.toIso8601String()
+      });
+      _autoLogout();
       notifyListeners();
     }
   }
@@ -58,11 +70,46 @@ class Auth with ChangeNotifier {
     return _authenticate(email, password, 'signInWithPassword');
   }
 
+  Future<void> tryAutoLogin() async {
+    if (isAuth) {
+      return;
+    }
+
+    final userData = await Store.getMap('userData');
+    if (userData.isEmpty) {
+      return;
+    }
+
+    final expireDate = DateTime.parse(userData['expireDate']);
+    if (expireDate.isBefore(DateTime.now())) return;
+
+    _token = userData['token'];
+    _email = userData['email'];
+    _userid = userData['userId'];
+    _expireDate = expireDate;
+
+    _autoLogout();
+    notifyListeners();
+  }
+
   void logout() {
     _token = null;
     _email = null;
     _userid = null;
     _expireDate = null;
+    _clearLogoutTimer();
     notifyListeners();
+  }
+
+  void _clearLogoutTimer() {
+    _logoutTimer?.cancel();
+    _logoutTimer = null;
+  }
+
+  void _autoLogout() {
+    _clearLogoutTimer();
+    final timeToLogout = _expireDate?.difference(DateTime.now()).inSeconds;
+    print(timeToLogout);
+    _logoutTimer = Timer(Duration(seconds: timeToLogout ?? 0), logout);
   }
 }
