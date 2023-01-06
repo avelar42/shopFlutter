@@ -12,12 +12,16 @@ class AuthForm extends StatefulWidget {
   _AuthFormState createState() => _AuthFormState();
 }
 
-class _AuthFormState extends State<AuthForm> {
+class _AuthFormState extends State<AuthForm>
+    with SingleTickerProviderStateMixin {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {'email': '', 'password': ''};
   bool _isLoading = false;
+
+  AnimationController? _controller;
+  Animation<Size>? _heightAnimation;
 
   bool _isLogin() => _authMode == AuthMode.Login;
   bool _isSignup() => _authMode == AuthMode.Signup;
@@ -26,8 +30,10 @@ class _AuthFormState extends State<AuthForm> {
     setState(() {
       if (_isLogin()) {
         _authMode = AuthMode.Signup;
+        _controller?.forward();
       } else {
         _authMode = AuthMode.Login;
+        _controller?.reverse();
       }
     });
   }
@@ -44,6 +50,17 @@ class _AuthFormState extends State<AuthForm> {
                     child: Text('Fechar.'))
               ],
             ));
+  }
+
+  @override
+  void initState() {
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+    _heightAnimation = Tween(
+            begin: Size(double.infinity, 310), end: Size(double.infinity, 400))
+        .animate(CurvedAnimation(parent: _controller!, curve: Curves.linear));
+
+    _heightAnimation?.addListener(() => setState(() {}));
   }
 
   Future<void> _submit() async {
@@ -83,7 +100,8 @@ class _AuthFormState extends State<AuthForm> {
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Container(
-        height: _isLogin() ? 310 : 400,
+        //height: _isLogin() ? 310 : 400,
+        height: _heightAnimation?.value.height ?? (_isLogin() ? 310 : 400),
         width: deviceSize.width * 0.75,
         padding: const EdgeInsets.all(16),
         child: Form(
