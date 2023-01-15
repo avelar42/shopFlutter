@@ -28,10 +28,10 @@ class ProductGridItem extends StatelessWidget {
           //   product.imageUrl,
           //   fit: BoxFit.cover,
           // ),
-          // onTap: () {
-          //   Navigator.of(context)
-          //       .pushNamed(AppRoutes.PRODUCT_DETAIL, arguments: product);
-          // },
+          onTap: () {
+            Navigator.of(context)
+                .pushNamed(AppRoutes.PRODUCT_DETAIL, arguments: product);
+          },
         ),
         footer: GridTileBar(
           title: Text(
